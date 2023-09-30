@@ -6,13 +6,6 @@ import (
 	"strings"
 )
 
-const separator = "\r\n"
-
-type Command struct {
-	Type string
-	Data string
-}
-
 func Deserialize(commandString string) ([]Command, error) {
 	cmd := make([]Command, 0)
 
@@ -32,7 +25,7 @@ func parseCommands(commandType, commandString string) ([]Command, error) {
 	cmd := make([]Command, 0)
 
 	switch commandType {
-	case "SimpleString":
+	case SimpleStringType:
 		crlf := strings.Index(commandString, separator)
 		if crlf == -1 {
 			return cmd, errors.New("command not terminated with CRLF")
@@ -41,7 +34,7 @@ func parseCommands(commandType, commandString string) ([]Command, error) {
 		c.Type = commandType
 		c.Data = commandString[1:crlf]
 		cmd = append(cmd, c)
-	case "BulkStrings":
+	case BulkStringType:
 		parsedCmd, e := parseBulkString(commandString)
 		if e != nil {
 			return cmd, e
@@ -50,7 +43,7 @@ func parseCommands(commandType, commandString string) ([]Command, error) {
 		for _, v := range parsedCmd {
 			cmd = append(cmd, v)
 		}
-	case "Arrays":
+	case ArraysType:
 		first := strings.Index(commandString, separator)
 		startNextCommands := commandString[first+len(separator):]
 		nextType, err := parseCommandType(startNextCommands[0])
@@ -71,15 +64,15 @@ func parseCommands(commandType, commandString string) ([]Command, error) {
 func parseCommandType(firstByte uint8) (string, error) {
 	switch firstByte {
 	case '+':
-		return "SimpleString", nil
+		return SimpleStringType, nil
 	case '-':
 		return "SimpleErrors", nil
 	case ':':
 		return "Integers", nil
 	case '$':
-		return "BulkStrings", nil
+		return BulkStringType, nil
 	case '*':
-		return "Arrays", nil
+		return ArraysType, nil
 	default:
 		return "", fmt.Errorf("%c is unsupported command data type", firstByte)
 	}
@@ -90,13 +83,16 @@ func parseBulkString(c string) ([]Command, error) {
 	cmds := strings.Split(c, separator)
 
 	for i := 1; i < len(cmds); i = i + 2 {
+		cmd := Command{}
 		if cmds[i] == "" {
-			continue
+			cmd = Command{Type: BulkStringType}
+		} else {
+			cmd = Command{
+				Type: BulkStringType,
+				Data: cmds[i],
+			}
 		}
-		cmd := Command{
-			Type: "BulkStrings",
-			Data: cmds[i],
-		}
+
 		res = append(res, cmd)
 	}
 

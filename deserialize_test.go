@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestSerialize(t *testing.T) {
+func TestDeserialize(t *testing.T) {
 	testCases := []struct {
 		desc  string
 		input string
@@ -22,7 +22,7 @@ func TestSerialize(t *testing.T) {
 				err error
 			}{
 				c: []Command{
-					{Type: "SimpleString", Data: "hello world"},
+					{Type: SimpleStringType, Data: "hello world"},
 				},
 				err: nil,
 			},
@@ -34,7 +34,9 @@ func TestSerialize(t *testing.T) {
 				c   []Command
 				err error
 			}{
-				c:   []Command{},
+				c: []Command{
+					{Type: BulkStringType},
+				},
 				err: nil,
 			},
 		},
@@ -46,8 +48,8 @@ func TestSerialize(t *testing.T) {
 				err error
 			}{
 				c: []Command{
-					{Type: "BulkStrings", Data: "echo"},
-					{Type: "BulkStrings", Data: "hello world"},
+					{Type: BulkStringType, Data: "echo"},
+					{Type: BulkStringType, Data: "hello world"},
 				},
 				err: nil,
 			},
@@ -60,7 +62,7 @@ func TestSerialize(t *testing.T) {
 				err error
 			}{
 				c: []Command{
-					{Type: "BulkStrings", Data: "ping"},
+					{Type: BulkStringType, Data: "ping"},
 				},
 				err: nil,
 			},
@@ -73,8 +75,8 @@ func TestSerialize(t *testing.T) {
 				err error
 			}{
 				c: []Command{
-					{Type: "BulkStrings", Data: "get"},
-					{Type: "BulkStrings", Data: "key"},
+					{Type: BulkStringType, Data: "get"},
+					{Type: BulkStringType, Data: "key"},
 				},
 				err: nil,
 			},
@@ -87,7 +89,7 @@ func TestSerialize(t *testing.T) {
 				err error
 			}{
 				c: []Command{
-					{Type: "SimpleString", Data: "OK"},
+					{Type: SimpleStringType, Data: "OK"},
 				},
 				err: nil,
 			},
@@ -99,7 +101,9 @@ func TestSerialize(t *testing.T) {
 				c   []Command
 				err error
 			}{
-				c:   []Command{},
+				c: []Command{
+					{Type: BulkStringType},
+				},
 				err: nil,
 			},
 		},
