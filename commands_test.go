@@ -78,7 +78,10 @@ func TestGetCommand(t *testing.T) {
 				cmd Command
 				err error
 			}{
-				cmd: Command{name: "echo"},
+				cmd: Command{name: "echo", args: [][]byte{
+					[]byte("hello\r\n"),
+					[]byte("world\r\n"),
+				}},
 				err: nil,
 			},
 		},
