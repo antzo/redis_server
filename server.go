@@ -7,13 +7,12 @@ import (
 	"log"
 	"net"
 	"os"
-	"redis_server/serializer"
 )
 
 // Server that handle client connection using Redis protocol (RESP2)
 type Server struct {
-	config ServerConfig
-
+	config   ServerConfig
+	executor map[string]MessageHandler
 	messages chan clientMessage
 	errors   chan error
 	sigs     chan os.Signal
@@ -25,7 +24,7 @@ type ServerConfig struct {
 }
 
 type clientMessage struct {
-	message serializer.Message
+	message Message
 	con     net.Conn
 }
 
@@ -44,9 +43,18 @@ func (s *Server) Start() (err error) {
 			select {
 			case e := <-s.errors:
 				log.Print(e)
-			case msg := <-s.messages:
+			case clientMsg := <-s.messages:
 				log.Println("sending message back")
-				msg.con.Write([]byte("+OK\r\n"))
+
+				cmd, err := GetCommand(clientMsg.message)
+				if err == nil {
+					if handler, ok := s.executor[cmd.name]; ok {
+						response := handler(clientMsg.message)
+						clientMsg.con.Write(response.Data())
+					}
+				} else {
+					clientMsg.con.Write([]byte("+OK\r\n"))
+				}
 			}
 		}
 	}()
@@ -71,10 +79,10 @@ func (s *Server) read(c net.Conn) {
 		}
 	}()
 
-	reader := bufio.NewReader(c)
-	buf := make([]byte, s.config.ReadBufferSize)
-
 	for {
+		reader := bufio.NewReader(c)
+		buf := make([]byte, s.config.ReadBufferSize)
+
 		// Blocking call till we receive data from client
 		if _, err := reader.Read(buf); err != nil {
 			// client disconnected
@@ -86,7 +94,7 @@ func (s *Server) read(c net.Conn) {
 			return
 		}
 
-		message, err := serializer.Deserialize(buf)
+		message, err := Deserialize(buf)
 		if err != nil {
 			s.errors <- err
 			return
@@ -101,7 +109,10 @@ func NewServer(c ServerConfig) *Server {
 	c.ReadBufferSize = 128
 
 	return &Server{
-		config:   c,
+		config: c,
+		executor: map[string]MessageHandler{
+			"ping": Ping,
+		},
 		messages: make(chan clientMessage),
 		errors:   make(chan error),
 		sigs:     make(chan os.Signal, 1),

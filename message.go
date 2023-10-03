@@ -1,4 +1,4 @@
-package serializer
+package redis_server
 
 import (
 	"bytes"
@@ -35,7 +35,7 @@ type ArrayMessage struct {
 
 func (c ArrayMessage) Type() rune { return arrayType }
 
-// Data writes RESP2 array binary data and all the commands inside the array
+// Data writes RESP2 array binary data and all the availableCommands inside the array
 func (c ArrayMessage) Data() []byte {
 	var buf bytes.Buffer
 

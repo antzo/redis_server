@@ -1,4 +1,4 @@
-package serializer
+package redis_server
 
 import (
 	"github.com/stretchr/testify/assert"

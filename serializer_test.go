@@ -1,4 +1,4 @@
-package serializer
+package redis_server
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -121,6 +121,22 @@ func Test_Deserialize(t *testing.T) {
 				err: nil,
 			},
 			binaryData: []byte("*2\r\n$7\r\nCOMMAND\r\n$4\r\nDOCS\r\n"),
+		},
+		{
+			desc: "ping command",
+			want: struct {
+				message Message
+				err     error
+			}{
+				message: ArrayMessage{Messages: []Message{
+					StandardMessage{
+						typeName: bulkStringType,
+						data:     []byte("$4\r\nping\r\n"),
+					},
+				}},
+				err: nil,
+			},
+			binaryData: []byte("*1\r\n$4\r\nping\r\n"),
 		},
 	}
 
