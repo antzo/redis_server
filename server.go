@@ -47,11 +47,15 @@ func (s *Server) Start() (err error) {
 				log.Println("sending message back")
 
 				cmd, err := GetCommand(clientMsg.message)
-				if err == nil {
-					if handler, ok := s.executor[cmd.name]; ok {
-						response := handler(clientMsg.message)
-						clientMsg.con.Write(response.Data())
-					}
+				if err != nil {
+					// TODO: Send error message
+					log.Println(err)
+					continue
+				}
+
+				if handler, ok := s.executor[cmd.name]; ok {
+					response := handler(cmd)
+					clientMsg.con.Write(response.Data())
 				} else {
 					clientMsg.con.Write([]byte("+OK\r\n"))
 				}
@@ -112,6 +116,7 @@ func NewServer(c ServerConfig) *Server {
 		config: c,
 		executor: map[string]MessageHandler{
 			"ping": Ping,
+			"echo": Echo,
 		},
 		messages: make(chan clientMessage),
 		errors:   make(chan error),

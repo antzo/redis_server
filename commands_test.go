@@ -5,15 +5,40 @@ import (
 	"testing"
 )
 
-func TestPing(t *testing.T) {
+func TestPing_SimpleString(t *testing.T) {
 	expected := StandardMessage{
 		typeName: simpleStringType,
 		data:     []byte("+PONG\r\n"),
 	}
+	assert.Equal(t, expected, Ping(Command{name: "ping"}))
+}
 
-	assert.Equal(t, expected, Ping(StandardMessage{
-		typeName: simpleStringType,
-		data:     []byte("+PING\r\n"),
+func TestPing_BulkString(t *testing.T) {
+	expected := StandardMessage{
+		typeName: bulkStringType,
+		data:     []byte("$11\r\nhello world\r\n"),
+	}
+
+	assert.Equal(t, expected, Ping(Command{
+		name: "ping",
+		args: [][]byte{
+			[]byte("hello"),
+			[]byte("world"),
+		},
+	}))
+}
+
+func TestEcho(t *testing.T) {
+	expected := StandardMessage{
+		typeName: bulkStringType,
+		data:     []byte("$2\r\nhi\r\n"),
+	}
+
+	assert.Equal(t, expected, Echo(Command{
+		name: "echo",
+		args: [][]byte{
+			[]byte("hi"),
+		},
 	}))
 }
 
@@ -79,8 +104,8 @@ func TestGetCommand(t *testing.T) {
 				err error
 			}{
 				cmd: Command{name: "echo", args: [][]byte{
-					[]byte("hello\r\n"),
-					[]byte("world\r\n"),
+					[]byte("hello"),
+					[]byte("world"),
 				}},
 				err: nil,
 			},
