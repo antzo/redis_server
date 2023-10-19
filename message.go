@@ -28,7 +28,8 @@ type StandardMessage struct {
 func (c StandardMessage) Type() rune   { return c.typeName }
 func (c StandardMessage) Data() []byte { return c.data }
 
-// ArrayMessage represents an Array RESP2 protocol request/response
+// ArrayMessage represents an Array RESP2 protocol request/response. It contains an array of
+// StandardMessage's
 type ArrayMessage struct {
 	Messages []Message
 }

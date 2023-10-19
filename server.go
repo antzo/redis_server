@@ -44,8 +44,6 @@ func (s *Server) Start() (err error) {
 			case e := <-s.errors:
 				log.Print(e)
 			case clientMsg := <-s.messages:
-				log.Println("sending message back")
-
 				cmd, err := GetCommand(clientMsg.message)
 				if err != nil {
 					// TODO: Send error message
@@ -117,6 +115,8 @@ func NewServer(c ServerConfig) *Server {
 		executor: map[string]MessageHandler{
 			"ping": Ping,
 			"echo": Echo,
+			"set":  Set,
+			"get":  Get,
 		},
 		messages: make(chan clientMessage),
 		errors:   make(chan error),

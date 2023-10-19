@@ -57,6 +57,63 @@ func Echo(command Command) Message {
 	}
 }
 
+// hasTable hold all key-value pairs. The elements in the hash table hold
+// the pointers to a key-value pair entry.
+var hashTable = map[string]string{}
+
+// Set a key on our global hashTable. For now, we are ignoring all the expiration options
+// https://redis.io/commands/set/
+func Set(command Command) Message {
+	if len(command.args) < 1 {
+		return StandardMessage{
+			typeName: simpleErrorType,
+			data:     []byte("invalid arguments"),
+		}
+	}
+
+	key := command.args[0]
+	value := command.args[1]
+
+	hashTable[string(key)] = string(value)
+
+	return StandardMessage{
+		typeName: simpleStringType,
+		data:     []byte("+OK\r\n"),
+	}
+}
+
+func Get(command Command) Message {
+	if len(command.args) <= 0 {
+		return StandardMessage{
+			typeName: simpleErrorType,
+			data:     []byte("invalid key"),
+		}
+	}
+
+	key := string(command.args[0])
+
+	if v, ok := hashTable[key]; ok {
+		return StandardMessage{
+			typeName: bulkStringType,
+			data: []byte(
+				fmt.Sprintf(
+					"%c%d%c%c%s%c%c",
+					bulkStringType,
+					len(v),
+					CR, LF,
+					v,
+					CR, LF,
+				),
+			),
+		}
+	} else {
+		return StandardMessage{
+			typeName: simpleStringType,
+			data:     []byte("_\r\n"), // Special NullValue
+		}
+	}
+}
+
 type Command struct {
 	name string
 	args [][]byte

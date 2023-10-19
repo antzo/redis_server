@@ -10,3 +10,12 @@ originally wrote it in just over 300 lines of TCL, you can see that original ver
 
 Since the first version in 2009, Redis has been ported to C and released as open source. It’s also become one of the 
 most widely used key-value / NoSQL databases.
+
+# Benchmarking
+
+```
+~ > redis-benchmark -t SET,GET -q
+WARNING: Could not fetch server CONFIG
+SET: 81037.28 requests per second, p50=0.327 msec
+GET: 78003.12 requests per second, p50=0.359 msec
+```

@@ -3,6 +3,7 @@ package redis_server
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -29,13 +30,14 @@ func Deserialize(binaryData []byte) (Message, error) {
 		return deserializeBulkString(binaryData)
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("messageType: %c not supported on data: %s", messageType, binaryData)
 }
 
 func deserializeBulkString(data []byte) (Message, error) {
 	message := StandardMessage{typeName: bulkStringType}
+	next := bytes.IndexByte(data, CR)
 
-	length, err := strconv.Atoi(string(data[1]))
+	length, err := strconv.Atoi(string(data[1:next]))
 	if err != nil {
 		return message, err
 	}
@@ -44,7 +46,14 @@ func deserializeBulkString(data []byte) (Message, error) {
 		return message, errors.New("parser: deserialize: bulkString: invalid message")
 	}
 
-	message.data = data[0 : length+6]
+	// This will add how many bytes we need to read.
+	// For doing that we need to add 6+one byte per digit on the length.
+	// - one byte for $ char that indicates it's a bulkstring (1)
+	// - two bytes on the first \r\n (3)
+	// - two more for the final \r\n (5)
+	// - and finally N bytes for each digit that indicates the length (ex: 3length -> 1 byte, 300length -> 3bytes)
+	digits := length / 10
+	message.data = data[0 : length+6+digits]
 
 	return message, nil
 }
@@ -66,6 +75,9 @@ func deserializeArray(data []byte) (Message, error) {
 		cmd, err := Deserialize(data[next+1:])
 		if err != nil {
 			return nil, err
+		}
+		if cmd == nil {
+			return nil, nil
 		}
 		command.Messages = append(command.Messages, cmd)
 		next = next + len(cmd.Data())

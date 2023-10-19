@@ -138,6 +138,30 @@ func Test_Deserialize(t *testing.T) {
 			},
 			binaryData: []byte("*1\r\n$4\r\nping\r\n"),
 		},
+		{
+			desc: "set __rand_int__",
+			want: struct {
+				message Message
+				err     error
+			}{
+				message: ArrayMessage{Messages: []Message{
+					StandardMessage{
+						typeName: bulkStringType,
+						data:     []byte("$3\r\nSET\r\n"),
+					},
+					StandardMessage{
+						typeName: bulkStringType,
+						data:     []byte("$16\r\nkey:__rand_int__\r\n"),
+					},
+					StandardMessage{
+						typeName: bulkStringType,
+						data:     []byte("$3\r\nVXK\r\n"),
+					},
+				}},
+				err: nil,
+			},
+			binaryData: []byte("*3\r\n$3\r\nSET\r\n$16\r\nkey:__rand_int__\r\n$3\r\nVXK\r\n"),
+		},
 	}
 
 	for _, tC := range testCases {
